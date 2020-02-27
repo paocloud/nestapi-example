@@ -1,0 +1,19 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nestapi
+  namespace: default
+  labels:
+    app: nestapi
+    project: nestapi-example
+    environment: production
+spec:
+  ports:
+    - name: api
+      protocol: TCP
+      port: 5000
+      targetPort: 5000
+  selector:
+    app: nestapi
+    tier: backend
+  type: ClusterIP

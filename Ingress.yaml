@@ -1,0 +1,22 @@
+kind: Ingress
+apiVersion: extensions/v1beta1
+metadata:
+  name: nestapi
+  namespace: default
+  labels:
+    project: nestapi-example
+    environment: production
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/configuration-snippet: |
+      more_set_headers "server: PaOCLOUD";
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+    - host: nestapi.paocloud.in.th
+      http:
+        paths:
+          - path: /
+            backend:
+              serviceName: nestapi
+              servicePort: 5000
