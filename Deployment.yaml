@@ -1,0 +1,75 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: nestapi
+  namespace: default
+  labels:
+    app: nestapi
+    project: nestapi-example
+    environment: production
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: nestapi
+      tier: backend
+  template:
+    metadata:
+      labels:
+        app: nestapi
+        tier: backend
+    spec:
+      volumes:
+        - name: tz-bangkok
+          hostPath:
+            path: /usr/share/zoneinfo/Asia/Bangkok
+      containers:
+        - name: nestapi
+          image: 'asia.gcr.io/paocloud-pj/nestapi:v1.0.1'
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sleep","30"]
+          ports:
+            - name: api
+              containerPort: 5000
+              protocol: TCP
+          env:
+            - name: PORT
+              value: '5000'
+            - name: AWS_SES_ACCESS_KEY
+              value: 'ABC1234XYZ'
+            - name: AWS_SES_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: nestapi-secret
+                  key: aws_ses_token
+          volumeMounts:
+            - name: tz-bangkok
+              mountPath: /etc/localtime
+          livenessProbe:
+            httpGet:
+              path: /api/v1/healthz
+              port: 5000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/v1/healthz
+              port: 5000
+              scheme: HTTP
+            initialDelaySeconds: 10
+            timeoutSeconds: 10
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 60
+      dnsPolicy: ClusterFirst
+      imagePullSecrets:
+        - name: gcr-pull-secret
